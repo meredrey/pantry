@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Spiżarnia</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg: #ffffff;
+  --bg2: #f4f6f8;
+  --border: #e4e8ed;
+  --text: #1a1d21;
+  --text2: #6b7280;
+  --text3: #9ca3af;
+  --green: #22c55e;
+  --green-bg: #f0fdf4;
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --accent: #6366f1;
+  --accent-light: #eef2ff;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text);
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+}
+
+.app-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+.icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg); cursor: pointer; color: var(--text2);
+  transition: all 0.15s;
+}
+.icon-btn:hover { background: var(--bg2); }
+.icon-btn svg { width: 18px; height: 18px; }
+
+.sync-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 16px; height: 42px;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+}
+.sync-btn:hover { background: var(--bg2); }
+.sync-btn.syncing { color: var(--accent); border-color: var(--accent); }
+.sync-btn svg { width: 16px; height: 16px; }
+
+/* ── STATS ── */
+.stats-row {
+  display: flex; padding: 0 16px 12px; gap: 10px;
+}
+
+.stat-card {
+  flex: 1; border-radius: 14px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.stat-card.green { background: var(--green-bg); }
+.stat-card.red   { background: var(--red-bg); }
+.stat-card.gray  { background: var(--bg2); }
+
+.stat-num { font-size: 28px; font-weight: 700; line-height: 1; }
+.stat-card.green .stat-num { color: #16a34a; }
+.stat-card.red   .stat-num { color: #dc2626; }
+.stat-card.gray  .stat-num { color: var(--text2); }
+
+.stat-label {
+  font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3);
+}
+
+/* ── FILTERS ── */
+.filter-row {
+  display: flex; gap: 7px; padding: 0 16px 14px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+
+.filter-tab {
+  flex-shrink: 0; padding: 8px 16px;
+  border-radius: 22px; border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.filter-tab:hover { border-color: var(--accent); color: var(--accent); }
+.filter-tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+.filter-tab.missing-tab.active { background: var(--red); border-color: var(--red); }
+
+/* ── CONTENT ── */
+.content { padding: 8px 16px 130px; }
+
+/* ── CATEGORY ── */
+.category { margin-bottom: 4px; }
+
+.category-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 4px 12px; cursor: pointer; user-select: none;
+}
+
+.cat-left { display: flex; align-items: center; gap: 10px; }
+.cat-emoji { font-size: 22px; width: 34px; text-align: center; }
+.cat-name { font-size: 18px; font-weight: 700; color: var(--text); }
+
+.cat-badge { display: flex; align-items: center; gap: 8px; }
+
+.cat-count-pill {
+  font-size: 13px; font-weight: 600;
+  padding: 3px 10px; border-radius: 10px;
+  background: var(--bg2); color: var(--text2);
+}
+
+.cat-chevron { color: var(--text3); font-size: 12px; transition: transform 0.2s; }
+.cat-chevron.open { transform: rotate(180deg); }
+
+.cat-divider { height: 1px; background: var(--border); }
+
+.category-items { overflow: hidden; transition: max-height 0.3s ease; }
+
+/* ── ITEM ROW ── */
+.item-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 4px; border-bottom: 1px solid var(--border);
+}
+.item-row:last-of-type { border-bottom: none; }
+
+.item-name {
+  flex: 1; font-size: 17px; font-weight: 400;
+  color: var(--text); transition: color 0.2s; line-height: 1.3;
+}
+.item-row.has-item .item-name { color: var(--text3); }
+
+/* ── TOGGLE ── */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.status-label {
+  font-size: 14px; font-weight: 700; min-width: 38px; text-align: right;
+}
+.status-label.on  { color: var(--green); }
+.status-label.off { color: var(--red); }
+
+.toggle {
+  position: relative; width: 56px; height: 32px;
+  cursor: pointer; flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+.toggle-track {
+  position: absolute; inset: 0;
+  border-radius: 16px; background: #fca5a5; transition: background 0.25s;
+}
+.toggle-thumb {
+  position: absolute; width: 24px; height: 24px;
+  left: 4px; top: 4px; background: white; border-radius: 50%;
+  transition: transform 0.25s; box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+}
+.toggle input:checked ~ .toggle-track { background: #86efac; }
+.toggle input:checked ~ .toggle-thumb { transform: translateX(24px); }
+
+/* ── DELETE ── */
+.delete-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  border: none; background: none;
+  color: var(--text3); cursor: pointer; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.delete-btn:hover { background: var(--red-bg); color: var(--red); }
+
+/* ── ADD ROW ── */
+.add-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 4px 16px;
+}
+
+.add-input {
+  flex: 1; height: 46px;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  background: var(--bg2);
+  font-family: 'DM Sans', sans-serif; font-size: 16px; color: var(--text);
+  padding: 0 16px; outline: none; transition: border-color 0.15s;
+}
+.add-input::placeholder { color: var(--text3); }
+.add-input:focus { border-color: var(--accent); background: white; }
+
+.add-btn {
+  width: 46px; height: 46px; border-radius: 12px;
+  border: none; background: var(--accent); color: white;
+  font-size: 24px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.add-btn:hover { background: #4f46e5; }
+
+/* ── FAB ── */
+.fab {
+  position: fixed; bottom: 24px; right: 16px;
+  background: var(--accent); color: white;
+  border: none; border-radius: 18px;
+  padding: 0 22px; height: 56px;
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4); transition: all 0.2s;
+}
+.fab:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(99,102,241,0.5); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 200; display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: white; border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 600px; max-height: 85vh;
+  overflow-y: auto; position: relative;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.modal-handle-row { display: flex; justify-content: center; padding: 14px 0 8px; }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 20px 16px; border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 20px; font-weight: 700; }
+
+.modal-close {
+  width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg2);
+  font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: var(--text2);
+}
+
+.modal-body { padding: 20px; }
+
+/* ── REVIEW ── */
+.review-section { margin-bottom: 24px; }
+.review-section-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text3); margin-bottom: 10px;
+}
+.review-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 16px;
+}
+.review-item:last-child { border-bottom: none; }
+.review-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.review-dot.red   { background: var(--red); }
+.review-dot.green { background: var(--green); }
+.review-dot.gray  { background: var(--text3); }
+.review-cat-tag { font-size: 13px; color: var(--text3); margin-left: auto; }
+
+/* ── SETTINGS ── */
+.settings-label {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text3); display: block; margin-bottom: 6px;
+}
+.settings-input {
+  width: 100%; height: 48px;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  background: var(--bg2);
+  font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text);
+  padding: 0 16px; outline: none; margin-bottom: 16px; transition: border-color 0.15s;
+}
+.settings-input:focus { border-color: var(--accent); background: white; }
+.settings-hint { font-size: 13px; color: var(--text3); line-height: 1.6; margin-bottom: 20px; }
+.settings-save {
+  width: 100%; height: 52px; border-radius: 14px;
+  border: none; background: var(--accent); color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s;
+}
+.settings-save:hover { background: #4f46e5; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 92px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--text); color: white;
+  padding: 12px 22px; border-radius: 26px;
+  font-size: 15px; font-weight: 500;
+  opacity: 0; transition: all 0.25s;
+  z-index: 300; white-space: nowrap; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── EMPTY ── */
+.empty-state { text-align: center; padding: 64px 20px; }
+.empty-emoji { font-size: 52px; margin-bottom: 14px; }
+.empty-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.empty-sub { font-size: 16px; color: var(--text2); }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-main">
+    <div class="app-title">🛒 Spiżarnia</div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="openSettings()" title="Ustawienia">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+      <button class="sync-btn" id="syncBtn" onclick="syncToSheets()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Sync
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card green">
+      <div class="stat-num" id="statHave">0</div>
+      <div class="stat-label">Mam</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-num" id="statMissing">0</div>
+      <div class="stat-label">Brakuje</div>
+    </div>
+    <div class="stat-card gray">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">Łącznie</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-tab active"       onclick="setFilter('all', this)">Wszystko</button>
+    <button class="filter-tab missing-tab"  onclick="setFilter('missing', this)">❌ Brakuje</button>
+    <button class="filter-tab"              onclick="setFilter('białko', this)">🥚 Białko</button>
+    <button class="filter-tab"              onclick="setFilter('warzywa', this)">🥦 Warzywa</button>
+    <button class="filter-tab"              onclick="setFilter('owoce', this)">🍎 Owoce</button>
+    <button class="filter-tab"              onclick="setFilter('węgle', this)">🌾 Węgle</button>
+    <button class="filter-tab"              onclick="setFilter('spiżarnia', this)">🫙 Spiżarnia</button>
+    <button class="filter-tab"              onclick="setFilter('napoje', this)">☕ Napoje</button>
+    <button class="filter-tab"              onclick="setFilter('słodycze', this)">🍫 Słodycze</button>
+    <button class="filter-tab"              onclick="setFilter('dom', this)">🏠 Dom</button>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<button class="fab" onclick="openReview()">📋 Tygodniowy przegląd</button>
+
+<!-- REVIEW MODAL -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal">
+    <div class="modal-handle-row"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title">📋 Tygodniowy przegląd</div>
+      <button class="modal-close" onclick="closeModal('reviewModal')">×</button>
+    </div>
+    <div class="modal-body" id="reviewContent"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-handle-row"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Ustawienia</div>
+      <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <label class="settings-label">Google Apps Script URL</label>
+      <input class="settings-input" type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/...">
+      <div class="settings-hint">
+        Wklej URL wdrożenia z Google Apps Script (Web App, dostęp: Everyone).<br>
+        <span id="lastSyncInfo" style="color:var(--accent);font-weight:600"></span>
+      </div>
+      <button class="settings-save" onclick="saveSettings()">Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_ITEMS = [
+  { id:'b1',  cat:'białko',    name:'Jajka',                        has:true },
+  { id:'b2',  cat:'białko',    name:'Tofu wędzone',                 has:true },
+  { id:'b3',  cat:'białko',    name:'Hummus',                       has:true },
+  { id:'b4',  cat:'białko',    name:'Jogurt naturalny',             has:true },
+  { id:'b5',  cat:'białko',    name:'Kefir',                        has:true },
+  { id:'b6',  cat:'białko',    name:'Serek wiejski',                has:true },
+  { id:'b7',  cat:'białko',    name:'Sznycle wege',                 has:true },
+  { id:'b8',  cat:'białko',    name:'Pierogi ruskie',               has:true },
+  { id:'b9',  cat:'białko',    name:'Pierogi z serem',              has:true },
+  { id:'w1',  cat:'warzywa',   name:'Papryka',                      has:true },
+  { id:'w2',  cat:'warzywa',   name:'Ogórek',                       has:true },
+  { id:'w3',  cat:'warzywa',   name:'Pomidorki koktajlowe',         has:true },
+  { id:'w4',  cat:'warzywa',   name:'Ziemniaki',                    has:true },
+  { id:'w5',  cat:'warzywa',   name:'Marchewka',                    has:true },
+  { id:'w6',  cat:'warzywa',   name:'Cebula',                       has:true },
+  { id:'w7',  cat:'warzywa',   name:'Czosnek',                      has:true },
+  { id:'w8',  cat:'warzywa',   name:'Szpinak',                      has:true },
+  { id:'o1',  cat:'owoce',     name:'Jabłka',                       has:true },
+  { id:'o2',  cat:'owoce',     name:'Banany',                       has:true },
+  { id:'o3',  cat:'owoce',     name:'Mandarynki / pomarańcze',      has:true },
+  { id:'o4',  cat:'owoce',     name:'Jagody / truskawki (mrożone)', has:true },
+  { id:'we1', cat:'węgle',     name:'Ryż',                          has:true },
+  { id:'we2', cat:'węgle',     name:'Makaron',                      has:true },
+  { id:'we3', cat:'węgle',     name:'Granola',                      has:true },
+  { id:'we4', cat:'węgle',     name:'Chleb pełnoziarnisty',         has:true },
+  { id:'we5', cat:'węgle',     name:'Bułki',                        has:true },
+  { id:'s1',  cat:'spiżarnia', name:'Oliwa z oliwek',               has:true },
+  { id:'s2',  cat:'spiżarnia', name:'Mleko roślinne',               has:true },
+  { id:'s3',  cat:'spiżarnia', name:'Pomidory krojone (puszka)',    has:true },
+  { id:'s4',  cat:'spiżarnia', name:'Ciecierzyca (puszka)',         has:true },
+  { id:'s5',  cat:'spiżarnia', name:'Soczewica czerwona',           has:true },
+  { id:'s6',  cat:'spiżarnia', name:'Sos sojowy / tamari',          has:true },
+  { id:'s7',  cat:'spiżarnia', name:'Bulion warzywny',              has:true },
+  { id:'s8',  cat:'spiżarnia', name:'Mieszanka studencka',          has:true },
+  { id:'n1',  cat:'napoje',    name:'Kawa',                         has:true },
+  { id:'n2',  cat:'napoje',    name:'Herbata',                      has:true },
+  { id:'n3',  cat:'napoje',    name:'Cytryna',                      has:true },
+  { id:'n4',  cat:'napoje',    name:'Cola Zero (Mata)',              has:true },
+  { id:'n5',  cat:'napoje',    name:'Cola Fizzy (Andi)',             has:true },
+  { id:'sl1', cat:'słodycze',  name:'Kinder czekolada',             has:true },
+  { id:'sl2', cat:'słodycze',  name:'Herbatniki',                   has:true },
+  { id:'sl3', cat:'słodycze',  name:'Gorzka czekolada (Mata)',      has:true },
+  { id:'d1',  cat:'dom',       name:'Płyn do naczyń',               has:true },
+  { id:'d2',  cat:'dom',       name:'Proszek do prania',            has:true },
+  { id:'d3',  cat:'dom',       name:'Papier toaletowy',             has:true },
+  { id:'d4',  cat:'dom',       name:'Ręczniki papierowe',           has:true },
+];
+
+const CATEGORIES = [
+  { id:'białko',    emoji:'🥚', label:'Białko' },
+  { id:'warzywa',   emoji:'🥦', label:'Warzywa' },
+  { id:'owoce',     emoji:'🍎', label:'Owoce' },
+  { id:'węgle',     emoji:'🌾', label:'Węglowodany' },
+  { id:'spiżarnia', emoji:'🫙', label:'Spiżarnia' },
+  { id:'napoje',    emoji:'☕', label:'Napoje' },
+  { id:'słodycze',  emoji:'🍫', label:'Słodycze & Przekąski' },
+  { id:'dom',       emoji:'🏠', label:'Dom' },
+];
+
+let items = [];
+let filter = 'all';
+let collapsedCats = new Set();
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwREyaZAHuK9X3Ro2k8thkDa3ypafb0eC1sRHGd6JFBPBCtCu2tG_6pfvEkqOmWym7oFw/exec';
+
+let settings = { scriptUrl: DEFAULT_SCRIPT_URL, lastSync: '' };
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('spizarnia_v2_items');
+    items = saved ? JSON.parse(saved) : DEFAULT_ITEMS.map(i => ({...i}));
+    const s = localStorage.getItem('spizarnia_v2_settings');
+    if (s) {
+      const parsed = JSON.parse(s);
+      settings = { ...settings, ...parsed };
+      // zawsze zachowaj domyślny URL jeśli nie nadpisano
+      if (!settings.scriptUrl) settings.scriptUrl = DEFAULT_SCRIPT_URL;
+    }
+    document.getElementById('scriptUrl').value = settings.scriptUrl;
+  } catch(e) {
+    items = DEFAULT_ITEMS.map(i => ({...i}));
+  }
+}
+
+function saveState() {
+  localStorage.setItem('spizarnia_v2_items', JSON.stringify(items));
+}
+
+function getVisible() {
+  if (filter === 'missing') return items.filter(i => !i.has);
+  if (filter === 'all') return items;
+  return items.filter(i => i.cat === filter);
+}
+
+function render() {
+  const haveCount    = items.filter(i => i.has).length;
+  const missingCount = items.filter(i => !i.has).length;
+  document.getElementById('statHave').textContent    = haveCount;
+  document.getElementById('statMissing').textContent = missingCount;
+  document.getElementById('statTotal').textContent   = items.length;
+
+  const visible = getVisible();
+  const content = document.getElementById('content');
+  let html = '';
+
+  if (filter === 'missing' && visible.length === 0) {
+    html = `<div class="empty-state">
+      <div class="empty-emoji">✅</div>
+      <div class="empty-title">Niczego nie brakuje!</div>
+      <div class="empty-sub">Spiżarnia w pełni zaopatrzona.</div>
+    </div>`;
+  } else {
+    const catsToShow = (filter === 'all' || filter === 'missing')
+      ? CATEGORIES : CATEGORIES.filter(c => c.id === filter);
+
+    catsToShow.forEach(cat => {
+      const catVisible  = visible.filter(i => i.cat === cat.id);
+      const catAll      = items.filter(i => i.cat === cat.id);
+      if (catVisible.length === 0 && filter !== 'all') return;
+
+      const haveInCat   = catAll.filter(i => i.has).length;
+      const isCollapsed = collapsedCats.has(cat.id);
+
+      html += `<div class="category" id="cat-${cat.id}">
+        <div class="category-header" onclick="toggleCat('${cat.id}')">
+          <div class="cat-left">
+            <span class="cat-emoji">${cat.emoji}</span>
+            <span class="cat-name">${cat.label}</span>
+          </div>
+          <div class="cat-badge">
+            <span class="cat-count-pill">${haveInCat}/${catAll.length}</span>
+            <span class="cat-chevron ${!isCollapsed ? 'open' : ''}">▼</span>
+          </div>
+        </div>
+        <div class="cat-divider"></div>
+        <div class="category-items" style="max-height:${isCollapsed ? '0' : '9999px'}">`;
+
+      catVisible.forEach(item => {
+        html += `<div class="item-row ${item.has ? 'has-item' : ''}" id="row-${item.id}">
+          <span class="item-name">${item.name}</span>
+          <div class="toggle-wrap">
+            <span class="status-label ${item.has ? 'on' : 'off'}">${item.has ? 'Jest' : 'Brak'}</span>
+            <label class="toggle">
+              <input type="checkbox" ${item.has ? 'checked' : ''} onchange="toggleItem('${item.id}', this.checked)">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+            <button class="delete-btn" onclick="deleteItem('${item.id}')" title="Usuń">×</button>
+          </div>
+        </div>`;
+      });
+
+      html += `<div class="add-row">
+        <input class="add-input" type="text" placeholder="Dodaj produkt..." id="input-${cat.id}"
+          onkeydown="if(event.key==='Enter') addItem('${cat.id}')">
+        <button class="add-btn" onclick="addItem('${cat.id}')">+</button>
+      </div>`;
+
+      html += `</div></div>`;
+    });
+  }
+
+  content.innerHTML = html;
+}
+
+function toggleItem(id, val) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.has = val;
+  item.lastChanged = new Date().toISOString();
+  saveState();
+
+  const row = document.getElementById('row-' + id);
+  if (row) {
+    row.className = 'item-row' + (val ? ' has-item' : '');
+    const label = row.querySelector('.status-label');
+    if (label) { label.textContent = val ? 'Jest' : 'Brak'; label.className = 'status-label ' + (val ? 'on' : 'off'); }
+  }
+
+  document.getElementById('statHave').textContent    = items.filter(i => i.has).length;
+  document.getElementById('statMissing').textContent = items.filter(i => !i.has).length;
+  if (filter === 'missing' && val) render();
+}
+
+function addItem(catId) {
+  const input = document.getElementById('input-' + catId);
+  if (!input) return;
+  const name = input.value.trim();
+  if (!name) return;
+  items.push({ id: 'c_' + Date.now(), cat: catId, name, has: true, custom: true });
+  input.value = '';
+  saveState(); render();
+  showToast('Dodano: ' + name);
+}
+
+function deleteItem(id) {
+  const item = items.find(i => i.id === id);
+  if (!confirm('Usunąć "' + (item ? item.name : '') + '"?')) return;
+  items = items.filter(i => i.id !== id);
+  saveState(); render();
+  if (item) showToast('Usunięto: ' + item.name);
+}
+
+function toggleCat(catId) {
+  if (collapsedCats.has(catId)) collapsedCats.delete(catId);
+  else collapsedCats.add(catId);
+  render();
+}
+
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function openReview() {
+  const missing = items.filter(i => !i.has);
+  const haveCount = items.filter(i => i.has).length;
+  let html = '';
+
+  if (missing.length > 0) {
+    html += `<div class="review-section">
+      <div class="review-section-title">Czego brakuje (${missing.length})</div>`;
+    missing.forEach(i => {
+      const cat = CATEGORIES.find(c => c.id === i.cat);
+      html += `<div class="review-item">
+        <div class="review-dot red"></div>
+        <strong>${i.name}</strong>
+        <span class="review-cat-tag">${cat ? cat.emoji + ' ' + cat.label : ''}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div style="text-align:center;padding:20px 0 24px">
+      <div style="font-size:40px;margin-bottom:10px">✅</div>
+      <div style="font-size:18px;font-weight:700;color:#16a34a">Niczego nie brakuje!</div>
+    </div>`;
+  }
+
+  html += `<div class="review-section">
+    <div class="review-section-title">Podsumowanie</div>
+    <div class="review-item"><div class="review-dot green"></div>Mam w domu: <strong style="margin-left:4px">${haveCount} produktów</strong></div>
+    <div class="review-item"><div class="review-dot red"></div>Do kupienia: <strong style="margin-left:4px">${missing.length} produktów</strong></div>
+    <div class="review-item"><div class="review-dot gray"></div>Łącznie na liście: <strong style="margin-left:4px">${items.length} produktów</strong></div>
+  </div>`;
+
+  document.getElementById('reviewContent').innerHTML = html;
+  document.getElementById('reviewModal').classList.add('open');
+}
+
+function openSettings() {
+  const info = document.getElementById('lastSyncInfo');
+  if (info && settings.lastSync) {
+    const d = new Date(settings.lastSync);
+    info.textContent = '✓ Ostatni sync: ' + d.toLocaleString('pl-PL');
+  }
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function saveSettings() {
+  settings.scriptUrl = document.getElementById('scriptUrl').value.trim();
+  localStorage.setItem('spizarnia_v2_settings', JSON.stringify(settings));
+  closeModal('settingsModal');
+  showToast('Ustawienia zapisane ✓');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+const SYNC_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>`;
+const SPIN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>`;
+
+async function syncToSheets() {
+  if (!settings.scriptUrl) { openSettings(); showToast('Skonfiguruj URL ⚙️'); return; }
+
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('syncing'); btn.innerHTML = SPIN_SVG + ' Sync...'; btn.disabled = true;
+
+  try {
+    await fetch(settings.scriptUrl, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'sync', timestamp: new Date().toISOString(),
+        items: items.map(i => ({
+          id: i.id, category: i.cat, name: i.name,
+          has: i.has ? 'TAK' : 'NIE', lastChanged: i.lastChanged || ''
+        }))
+      })
+    });
+    settings.lastSync = new Date().toISOString();
+    localStorage.setItem('spizarnia_v2_settings', JSON.stringify(settings));
+    showToast('✓ Zsynchronizowano z Google Sheets');
+  } catch(e) {
+    showToast('⚠ Błąd — sprawdź URL w ustawieniach');
+  }
+
+  btn.classList.remove('syncing'); btn.innerHTML = SYNC_SVG + ' Sync'; btn.disabled = false;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+loadState();
+render();
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
