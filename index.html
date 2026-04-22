@@ -479,7 +479,7 @@ const CATEGORIES = [
 let items = [];
 let filter = 'all';
 let collapsedCats = new Set();
-const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwREyaZAHuK9X3Ro2k8thkDa3ypafb0eC1sRHGd6JFBPBCtCu2tG_6pfvEkqOmWym7oFw/exec';
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoPlzFFZm16K8WaL1Qwt7o2cMGp5dzh6yx_bKe8j0CvlmefQ8fgVoBKwpa8ujpqtk12Q/exec';
 
 let settings = { scriptUrl: DEFAULT_SCRIPT_URL, lastSync: '' };
 
@@ -706,20 +706,42 @@ async function syncToSheets() {
       }))
     });
 
-    // Apps Script wymaga application/x-www-form-urlencoded żeby ominąć CORS preflight
-    const body = new URLSearchParams({ data: payload });
+    // JSONP — jedyna metoda która działa z Apps Script bez serwera
+    await new Promise((resolve, reject) => {
+      const cbName = 'cb_' + Date.now();
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => {
+        delete window[cbName];
+        document.body.removeChild(script);
+        reject(new Error('timeout'));
+      }, 10000);
 
-    await fetch(settings.scriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: body
+      window[cbName] = (response) => {
+        clearTimeout(timeout);
+        delete window[cbName];
+        document.body.removeChild(script);
+        resolve(response);
+      };
+
+      const url = settings.scriptUrl
+        + '?callback=' + cbName
+        + '&data=' + encodeURIComponent(payload);
+
+      script.src = url;
+      script.onerror = () => {
+        clearTimeout(timeout);
+        delete window[cbName];
+        document.body.removeChild(script);
+        reject(new Error('script error'));
+      };
+      document.body.appendChild(script);
     });
 
     settings.lastSync = new Date().toISOString();
     localStorage.setItem('spizarnia_v2_settings', JSON.stringify(settings));
     showToast('✓ Zsynchronizowano z Google Sheets');
   } catch(e) {
-    showToast('⚠ Błąd — sprawdź URL w ustawieniach');
+    showToast('⚠ Błąd sync: ' + e.message);
   }
 
   btn.classList.remove('syncing'); btn.innerHTML = SYNC_SVG + ' Sync'; btn.disabled = false;
