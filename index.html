@@ -697,17 +697,24 @@ async function syncToSheets() {
   btn.classList.add('syncing'); btn.innerHTML = SPIN_SVG + ' Sync...'; btn.disabled = true;
 
   try {
-    await fetch(settings.scriptUrl, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'sync', timestamp: new Date().toISOString(),
-        items: items.map(i => ({
-          id: i.id, category: i.cat, name: i.name,
-          has: i.has ? 'TAK' : 'NIE', lastChanged: i.lastChanged || ''
-        }))
-      })
+    const payload = JSON.stringify({
+      action: 'sync',
+      timestamp: new Date().toISOString(),
+      items: items.map(i => ({
+        id: i.id, category: i.cat, name: i.name,
+        has: i.has ? 'TAK' : 'NIE', lastChanged: i.lastChanged || ''
+      }))
     });
+
+    // Apps Script wymaga application/x-www-form-urlencoded żeby ominąć CORS preflight
+    const body = new URLSearchParams({ data: payload });
+
+    await fetch(settings.scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: body
+    });
+
     settings.lastSync = new Date().toISOString();
     localStorage.setItem('spizarnia_v2_settings', JSON.stringify(settings));
     showToast('✓ Zsynchronizowano z Google Sheets');
